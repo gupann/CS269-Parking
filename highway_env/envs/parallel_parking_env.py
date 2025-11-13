@@ -11,66 +11,73 @@ from highway_env.vehicle.graphics import VehicleGraphics
 
 
 class ParallelParkingEnv(ParkingEnv):
-    """
-    Parallel parking task with static parked cars on one side of the road
-    and one empty spot that is the goal.
-    """
 
     @classmethod
     def default_config(cls) -> dict:
         config = super().default_config()
         config.update(
             {
-                # number of parallel parking slots along the curb
-                "n_slots": 6,
-                # which slot index is empty and should be parked into
-                "empty_slot_index": 2,
-                # longitudinal size of the street (for scaling)
+                # horizontal size (left-right)
                 "street_length": 60.0,
-                # distance between driving lane center and parking lane center
-                "curb_offset": 4.0,
-                # we usually don't need the big rectangular walls here
-                "add_walls": False,
+                # distance from center to each parking row
+                "curb_offset": 10.0,
+                # number of slots per side
+                "n_slots": 8,
+                # which bottom-row slot index is empty (0-based)
+                "empty_slot_index": 3,  # can make this random later
+                # wall thickness and margins
+                "wall_margin": 4.0,
+                "add_walls": True,
             }
         )
         return config
 
+    # ------------------------------------------------------------------ #
+    # ROAD + WALLS
+    # ------------------------------------------------------------------ #
     def _create_road(self) -> None:
-        """
-        Create a straight road with one driving lane and a row of
-        short parking-lane segments that represent the parallel slots.
-        """
         net = RoadNetwork()
-        width = 4.0
-        lt = (LineType.CONTINUOUS, LineType.CONTINUOUS)
-
         L = self.config["street_length"]
         curb_offset = self.config["curb_offset"]
+        wall_margin = self.config["wall_margin"]
 
-        # Driving lane: along x, y = 0
+        lane_width = 10.0
+        lt = (LineType.CONTINUOUS, LineType.CONTINUOUS)
+
+        # Central driving lane (for ego): horizontal, y = 0
         net.add_lane(
             "drive_start",
             "drive_end",
-            StraightLane([0.0, 0.0], [L, 0.0], width=width, line_types=lt),
+            StraightLane(
+                [0.0, 0.0],
+                [L, 0.0],
+                width=lane_width,
+                line_types=lt,
+            ),
         )
 
-        # Parking lane: short segments along x, below the driving lane (at y = -curb_offset)
+        # Dummy short vertical lanes -> white slot markers (top & bottom rows)
         n_slots = self.config["n_slots"]
-        slot_length = L / (n_slots + 2)  # leave margins at both ends
+        inner_margin_x = 5.0  # empty at left/right before first/after last slot
+        total_slot_span = L - 2 * inner_margin_x
+        slot_length = total_slot_span / n_slots
 
-        for k in range(n_slots):
-            x0 = (k + 1) * slot_length
-            x1 = (k + 2) * slot_length
-            net.add_lane(
-                f"slot_{k}_in",
-                f"slot_{k}_out",
-                StraightLane(
-                    [x0, -curb_offset],
-                    [x1, -curb_offset],
-                    width=width,
-                    line_types=lt,
-                ),
-            )
+        for side, sign in (("bottom", -1.0), ("top", +1.0)):
+            y_row = sign * curb_offset
+
+            for i in range(n_slots + 1):
+                x = inner_margin_x + i * slot_length
+                # short vertical white line
+                net.add_lane(
+                    f"{side}_marker_{i}_in",
+                    f"{side}_marker_{i}_out",
+                    StraightLane(
+                        [x, y_row - 2.0],   # 4m long vertical marker
+                        [x, y_row + 2.0],
+                        width=0.1,
+                        line_types=lt,
+                    ),
+                )
 
         self.road = Road(
             network=net,
@@ -78,11 +85,39 @@ class ParallelParkingEnv(ParkingEnv):
             record_history=self.config["show_trajectories"],
         )
 
+        # Yellow rectangular border using four big obstacles
+        if self.config["add_walls"]:
+            top_y = curb_offset + wall_margin
+            bot_y = -curb_offset - wall_margin
+            left_x = 0.0
+            right_x = L
+
+            # top & bottom walls (horizontal)
+            for y in (top_y, bot_y):
+                wall = Obstacle(
+                    self.road, [(left_x + right_x) / 2.0, y], heading=0.0)
+                wall.LENGTH = (right_x - left_x) + 2.0
+                wall.WIDTH = 1.0
+                wall.diagonal = np.sqrt(wall.LENGTH**2 + wall.WIDTH**2)
+                # make them yellow-ish
+                wall.color = (1.0, 1.0, 0.0)
+                self.road.objects.append(wall)
+
+            # left & right walls (vertical)
+            height = top_y - bot_y
+            for x in (left_x, right_x):
+                wall = Obstacle(
+                    self.road, [x, (top_y + bot_y) / 2.0], heading=np.pi / 2.0)
+                wall.LENGTH = height + 2.0
+                wall.WIDTH = 1.0
+                wall.diagonal = np.sqrt(wall.LENGTH**2 + wall.WIDTH**2)
+                wall.color = (1.0, 1.0, 0.0)
+                self.road.objects.append(wall)
+
+    # ------------------------------------------------------------------ #
+    # VEHICLES / PARKED CARS / GOAL
+    # ------------------------------------------------------------------ #
     def _create_vehicles(self) -> None:
-        """
-        Ego starts in the driving lane, parked cars fill all slots except one,
-        and the goal is the center of the empty slot.
-        """
         n_slots = self.config["n_slots"]
         empty_idx = self.config["empty_slot_index"]
         curb_offset = self.config["curb_offset"]
@@ -90,43 +125,59 @@ class ParallelParkingEnv(ParkingEnv):
 
         self.controlled_vehicles = []
 
-        # --- Ego vehicle on the driving lane, a bit before the first slot ---
+        # --- Ego in the central lane ---
         drive_lane = self.road.network.get_lane(
             ("drive_start", "drive_end", 0))
-        ego_x = 0.1 * L
+        ego_x = 0.2 * L
         ego_y = drive_lane.position(ego_x, 0)[1]
 
         ego = self.action_type.vehicle_class(
             self.road,
             [ego_x, ego_y],
-            heading=0.0,  # facing along +x
+            heading=0.0,
             speed=0.0,
         )
         ego.color = VehicleGraphics.EGO_COLOR
         self.road.vehicles.append(ego)
         self.controlled_vehicles.append(ego)
 
-        # --- Parked "cars" as obstacles in every slot except the empty one ---
-        for k in range(n_slots):
-            lane = self.road.network.get_lane(
-                (f"slot_{k}_in", f"slot_{k}_out", 0))
-            center = lane.position((lane.length) / 2, 0)
+        # Geometry for slot centers
+        inner_margin_x = 5.0
+        total_slot_span = L - 2 * inner_margin_x
+        slot_length = total_slot_span / n_slots
 
-            if k == empty_idx:
-                # this is the empty slot, no parked car here
-                # we will place the goal here instead
-                goal_pos = center
-                goal_heading = lane.heading
-                continue
+        car_len = 4.5
+        car_wid = 2.0
 
-            # parked car as an obstacle rectangle
-            obstacle = Obstacle(self.road, center, heading=lane.heading)
-            # make the obstacle roughly car-sized
-            obstacle.LENGTH = 4.5
-            obstacle.WIDTH = 2.0
-            obstacle.diagonal = np.sqrt(obstacle.LENGTH**2 + obstacle.WIDTH**2)
+        # --- Top row: all slots filled ---
+        for i in range(n_slots):
+            x_center = inner_margin_x + (i + 0.5) * slot_length
+            y_center = +curb_offset
+
+            obstacle = Obstacle(self.road, [x_center, y_center], heading=0.0)
+            obstacle.LENGTH = car_len
+            obstacle.WIDTH = car_wid
+            obstacle.diagonal = np.sqrt(car_len**2 + car_wid**2)
             self.road.objects.append(obstacle)
 
-        # --- Goal landmark in the empty slot ---
+        # --- Bottom row: all filled except one empty slot (goal) ---
+        goal_pos, goal_heading = None, None
+        for i in range(n_slots):
+            x_center = inner_margin_x + (i + 0.5) * slot_length
+            y_center = -curb_offset
+
+            if i == empty_idx:
+                # empty slot -> goal here
+                goal_pos = np.array([x_center, y_center])
+                goal_heading = 0.0
+                continue
+
+            obstacle = Obstacle(self.road, [x_center, y_center], heading=0.0)
+            obstacle.LENGTH = car_len
+            obstacle.WIDTH = car_wid
+            obstacle.diagonal = np.sqrt(car_len**2 + car_wid**2)
+            self.road.objects.append(obstacle)
+
+        # --- Goal landmark in the empty bottom slot ---
         ego.goal = Landmark(self.road, goal_pos, heading=goal_heading)
         self.road.objects.append(ego.goal)
