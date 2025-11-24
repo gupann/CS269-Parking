@@ -94,7 +94,9 @@ class VehicleGraphics:
         pygame.draw.rect(vehicle_surface, cls.BLACK, rect, 1)
 
         # Tires
-        if type(vehicle) in [Vehicle, BicycleVehicle]:
+        # Draw tires for base Vehicle, BicycleVehicle, and their subclasses (like GoalSeekingVehicle)
+        # but not for IDMVehicle, LinearVehicle, or MDPVehicle which have different rendering
+        if (isinstance(vehicle, Vehicle) or isinstance(vehicle, BicycleVehicle)) and not isinstance(vehicle, (IDMVehicle, LinearVehicle, MDPVehicle)):
             tire_positions = [
                 [surface.pix(tire_length), surface.pix(length / 2 - v.WIDTH / 2)],
                 [surface.pix(tire_length), surface.pix(length / 2 + v.WIDTH / 2)],

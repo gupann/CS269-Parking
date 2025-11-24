@@ -102,6 +102,11 @@ def _register_highway_envs():
         entry_point="highway_env.envs.parallel_parking_dynObs_env:ParallelParkingDynObsEnv",
     )
 
+    register(
+        id="parking-reverse-dynObs-v0",
+        entry_point="highway_env.envs.reverse_parking_dynObs_env:ReverseParkingDynObsEnv",
+    )
+
     # racetrack_env.py
     register(
         id="racetrack-v0",
