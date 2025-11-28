@@ -96,8 +96,8 @@ class ParkingEnv(AbstractEnv, GoalEnv):
                 "action": {
                     "type": "ContinuousAction",
                     "acceleration_range": (-1.0, 1.0),
-                    # "steering_range": np.deg2rad(45),  # ±60° instead of default ±45°
-                    # "speed_range": (-1, 1),
+                    # "steering_range": np.deg2rad(60),  # ±60° instead of default ±45°
+                    "speed_range": (-2, 2),
                 },
                 "reward_weights": [1, 1, 0.1, 0.1, 1, 1],
                 "success_goal_reward": 0.08,
@@ -235,6 +235,7 @@ class ParkingEnv(AbstractEnv, GoalEnv):
         #         v = Vehicle.make_on_lane(self.road, lane_index, longitudinal=4.0, speed=0.0)
         #         self.road.vehicles.append(v)
         #         empty_spots.remove(lane_index)
+
         ### ORIGINAL CODE for Other Vehicles
         for i in range(self.config["vehicles_count"]):
             if not empty_spots:
