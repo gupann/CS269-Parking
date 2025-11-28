@@ -92,6 +92,24 @@ def _register_highway_envs():
         entry_point="highway_env.envs.parking_env:ParkingEnvParkedVehicles",
     )
 
+<<<<<<< Updated upstream
+=======
+    register(
+        id="parking-parallel-v0",
+        entry_point="highway_env.envs.parallel_parking_env:ParallelParkingEnv",
+    )
+
+    register(
+        id="parking-parallel-dynObs-v0",
+        entry_point="highway_env.envs.parallel_parking_dynObs_env:ParallelParkingDynObsEnv",
+    )
+
+    register(
+        id="parking-reverse-dynObs-v0",
+        entry_point="highway_env.envs.reverse_parking_dynObs_env:ReverseParkingDynObsEnv",
+    )
+
+>>>>>>> Stashed changes
     # racetrack_env.py
     register(
         id="racetrack-v0",

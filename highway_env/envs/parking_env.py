@@ -93,11 +93,22 @@ class ParkingEnv(AbstractEnv, GoalEnv):
                     "scales": [100, 100, 5, 5, 1, 1],
                     "normalize": False,
                 },
+<<<<<<< Updated upstream
                 "action": {"type": "ContinuousAction"},
                 "reward_weights": [1, 0.3, 0, 0, 0.02, 0.02],
                 "success_goal_reward": 0.12,
+=======
+                "action": {
+                    "type": "ContinuousAction",
+                    # "acceleration_range": (-1.0, 1.0),
+                    "steering_range": (-np.deg2rad(45), np.deg2rad(45)),  # ±45° steering range
+                    # "speed_range": (-1, 1),
+                },
+                # "reward_weights": [1, 1, 0.1, 0.1, 1, 1],
+                "reward_weights": [1, 0.3, 0, 0, 0.02, 0.02],
+                "success_goal_reward": 0.10,
+>>>>>>> Stashed changes
                 "collision_reward": -5,
-                "steering_range": np.deg2rad(45),
                 "simulation_frequency": 15,
                 "policy_frequency": 5,
                 "duration": 100,
@@ -105,7 +116,7 @@ class ParkingEnv(AbstractEnv, GoalEnv):
                 "screen_height": 300,
                 "centering_position": [0.5, 0.5],
                 "scaling": 7,
-                "controlled_vehicles": 1,
+                "controlled_vehicles": 3,
                 "vehicles_count": 0,
                 "add_walls": True,
             }

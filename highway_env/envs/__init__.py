@@ -12,6 +12,13 @@ from highway_env.envs.parking_env import (
     ParkingEnvActionRepeat,
     ParkingEnvParkedVehicles,
 )
+<<<<<<< Updated upstream
+=======
+from highway_env.envs.parallel_parking_env import ParallelParkingEnv
+from highway_env.envs.parallel_parking_dynObs_env import ParallelParkingDynObsEnv
+from highway_env.envs.reverse_parking_dynObs_env import ReverseParkingDynObsEnv
+
+>>>>>>> Stashed changes
 from highway_env.envs.racetrack_env import RacetrackEnv
 from highway_env.envs.roundabout_env import RoundaboutEnv
 from highway_env.envs.two_way_env import TwoWayEnv
@@ -30,6 +37,12 @@ __all__ = [
     "ParkingEnv",
     "ParkingEnvActionRepeat",
     "ParkingEnvParkedVehicles",
+<<<<<<< Updated upstream
+=======
+    "ParallelParkingEnv",
+    "ParallelParkingDynObsEnv",
+    "ReverseParkingDynObsEnv",
+>>>>>>> Stashed changes
     "RacetrackEnv",
     "RoundaboutEnv",
     "TwoWayEnv",
