@@ -95,7 +95,7 @@ class ParkingEnv(AbstractEnv, GoalEnv):
                 },
                 "action": {
                     "type": "ContinuousAction",
-                    "acceleration_range": (-1.0, 1.0),
+                    "acceleration_range": (-2.0, 2.0),
                     "speed_range": (-2, 2),
                 },
                 "reward_weights": [1, 1, 0.1, 0.1, 1, 1],
@@ -110,7 +110,7 @@ class ParkingEnv(AbstractEnv, GoalEnv):
                 "centering_position": [0.5, 0.5],
                 "scaling": 7,
                 "controlled_vehicles": 1,
-                "vehicles_count": 28,
+                "vehicles_count": 18,
                 "add_walls": True,
                 "manual_vehicle_position": None,
             }
@@ -145,14 +145,14 @@ class ParkingEnv(AbstractEnv, GoalEnv):
         self._create_road()
         self._create_vehicles()
 
-    def _create_road(self, spots: int = 14) -> None:
+    def _create_road(self, spots: int = 9) -> None:
         """
         Create a road composed of straight adjacent lanes.
 
         :param spots: number of spots in the parking
         """
         net = RoadNetwork()
-        width = 4.0
+        width = 6.5
         lt = (LineType.CONTINUOUS, LineType.CONTINUOUS)
         x_offset = 0
         y_offset = 10

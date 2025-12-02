@@ -81,8 +81,10 @@ class VehicleGraphics:
         )
         color = cls.get_color(v, transparent)
         pygame.draw.rect(vehicle_surface, color, rect, 0)
-        pygame.draw.rect(vehicle_surface, cls.lighten(color), rect_headlight_left, 0)
-        pygame.draw.rect(vehicle_surface, cls.lighten(color), rect_headlight_right, 0)
+        pygame.draw.rect(vehicle_surface, cls.lighten(
+            color), rect_headlight_left, 0)
+        pygame.draw.rect(vehicle_surface, cls.lighten(
+            color), rect_headlight_right, 0)
         if draw_roof:
             rect_roof = (
                 surface.pix(v.LENGTH / 2 - tire_length / 2),
@@ -98,8 +100,10 @@ class VehicleGraphics:
         # but not for IDMVehicle, LinearVehicle, or MDPVehicle which have different rendering
         if (isinstance(vehicle, Vehicle) or isinstance(vehicle, BicycleVehicle)) and not isinstance(vehicle, (IDMVehicle, LinearVehicle, MDPVehicle)):
             tire_positions = [
-                [surface.pix(tire_length), surface.pix(length / 2 - v.WIDTH / 2)],
-                [surface.pix(tire_length), surface.pix(length / 2 + v.WIDTH / 2)],
+                [surface.pix(tire_length), surface.pix(
+                    length / 2 - v.WIDTH / 2)],
+                [surface.pix(tire_length), surface.pix(
+                    length / 2 + v.WIDTH / 2)],
                 [
                     surface.pix(length - tire_length),
                     surface.pix(length / 2 - v.WIDTH / 2),
@@ -157,7 +161,8 @@ class VehicleGraphics:
         """Many thanks to https://stackoverflow.com/a/54714144."""
         # calculate the axis aligned bounding box of the rotated image
         w, h = image.get_size()
-        box = [pygame.math.Vector2(p) for p in [(0, 0), (w, 0), (w, -h), (0, -h)]]
+        box = [pygame.math.Vector2(p)
+               for p in [(0, 0), (w, 0), (w, -h), (0, -h)]]
         box_rotate = [p.rotate(angle) for p in box]
         min_box = (
             min(box_rotate, key=lambda p: p[0])[0],
@@ -186,7 +191,8 @@ class VehicleGraphics:
         surf.blit(rotated_image, origin)
         # draw rectangle around the image
         if show_rect:
-            pygame.draw.rect(surf, (255, 0, 0), (*origin, *rotated_image.get_size()), 2)
+            pygame.draw.rect(surf, (255, 0, 0),
+                             (*origin, *rotated_image.get_size()), 2)
 
     @classmethod
     def display_trajectory(
@@ -200,7 +206,8 @@ class VehicleGraphics:
         :param offscreen: whether the rendering should be done offscreen or not
         """
         for vehicle in states:
-            cls.display(vehicle, surface, transparent=True, offscreen=offscreen)
+            cls.display(vehicle, surface, transparent=True,
+                        offscreen=offscreen)
 
     @classmethod
     def display_history(
