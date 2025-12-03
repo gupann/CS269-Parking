@@ -155,8 +155,8 @@ class ParkingEnv(AbstractEnv, GoalEnv):
         lane_lt = (LineType.NONE, LineType.NONE)  # hide horizontal sidelines
         marker_lt = (LineType.CONTINUOUS, LineType.CONTINUOUS)
         x_offset = 0
-        y_offset = 10
-        length = 10
+        y_offset = 20
+        length = 12.0  # length of each parking slot
         slot_boundaries = set()
 
         for k in range(spots):
